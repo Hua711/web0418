@@ -66,6 +66,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const startX = -canvas.width * extensionFactor;
         
+        // 創建漸層
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        gradient.addColorStop(0, '#FF6B6B');     // 粉紅色
+        gradient.addColorStop(0.5, '#4ECDC4');   // 青色
+        gradient.addColorStop(1, '#45B7D1');     // 藍色
+        
         ctx.beginPath();
         ctx.moveTo(startX, points[0]);
         
@@ -75,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.lineTo(x, points[i]);
         }
         
+        ctx.strokeStyle = gradient;
         ctx.stroke();
     }
     
@@ -129,9 +136,9 @@ document.addEventListener('DOMContentLoaded', function() {
             currentWavePoints[i] = y;
         }
 
-        // 繪製波浪
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.lineWidth = 0.5;
+        // 繪製波浪 (移除這行，因為我們已經在 drawSmoothWave 中設置了 strokeStyle)
+        // ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.lineWidth = 1.5; // 增加線條寬度使顏色更明顯
         drawSmoothWave(currentWavePoints);
         
         // 保存當前波形作為下一幀的前一幀

@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 時間變數
     let time = Math.random() * 100; // 隨機的起始時間
+    let transformationTime = 0; // 形狀變換的時間控制
+    let isTransforming = false; // 是否正在變換形狀
+    const transformationDuration = 300; // 變換持續的幀數
     
     // 水平偏移量 - 用於實現右至左的移動
     let horizontalOffset = 0;
@@ -101,9 +104,56 @@ document.addEventListener('DOMContentLoaded', function() {
         return value;
     }
 
+    // 生成愛心形狀的點
+    function generateHeartPoint(x, width, height) {
+        const scale = height / 16;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        
+        // 將 x 映射到 -2 到 2 的範圍
+        const t = (x - centerX) / (width / 4);
+        
+        // 愛心函數
+        const y = -Math.sqrt(Math.cos(t) * Math.abs(Math.cos(t))) * Math.sin(t);
+        return centerY + y * scale;
+    }
+
+    // 在 generateWavePoint 函數後添加混合函數
+    function blendPoints(wave, heart, progress) {
+        return wave * (1 - progress) + heart * progress;
+    }
+
     function drawWave() {
         // 增加時間
         time += 0.01;
+        
+        // 每隔一段時間觸發形狀變換
+        if (time % 10 < 0.01 && !isTransforming) {
+            isTransforming = true;
+            transformationTime = 0;
+        }
+        
+        // 如果正在變換，更新變換進度
+        if (isTransforming) {
+            transformationTime++;
+            if (transformationTime >= transformationDuration) {
+                isTransforming = false;
+            }
+        }
+        
+        // 計算變換進度（使用正弦函數使變換更平滑）
+        let transformProgress = 0;
+        if (isTransforming) {
+            // 使用正弦函數創建緩動效果
+            const normalizedTime = transformationTime / transformationDuration;
+            if (normalizedTime < 0.5) {
+                // 0-0.5: 波浪變成愛心
+                transformProgress = Math.sin(normalizedTime * Math.PI) * 0.5;
+            } else {
+                // 0.5-1: 愛心變回波浪
+                transformProgress = Math.sin((1 - normalizedTime) * Math.PI) * 0.5;
+            }
+        }
         
         // 增加水平偏移量，實現從右到左的移動
         horizontalOffset += waveParams.horizontalSpeed;
@@ -123,9 +173,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 生成波形值，加入水平偏移
             const waveValue = generateWavePoint(x, time, horizontalOffset);
+            const waveY = verticalCenter + waveValue + verticalShift;
             
-            // 計算當前點的 y 坐標
-            let y = verticalCenter + waveValue + verticalShift;
+            // 生成愛心值
+            const heartY = generateHeartPoint(x, canvas.width, canvas.height);
+            
+            // 混合波浪和愛心
+            let y = blendPoints(waveY, heartY, transformProgress);
             
             // 與前一幀進行平滑過渡
             if (previousWavePoints[i]) {
